@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MovieMania - Preference-driven movie discovery and recommendation platform.">
+    <title>{% block title %}MovieMania — Discover What to Watch{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- MovieMania Custom Dark Cinema Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Site Navigation -->
+    <header class="site-header">
+        <div class="container nav-container">
+            <!-- Brand Logo -->
+            <a href="{% url 'home' %}" class="brand-logo" title="MovieMania Home">
+                <span class="brand-icon">🎬</span>
+                <span>Movie<span class="accent">Mania</span></span>
+            </a>
+
+            <!-- Search Form -->
+            <form action="{% url 'search' %}" method="GET" class="nav-search-form" role="search">
+                <span class="nav-search-icon">🔍</span>
+                <input type="text" name="q" class="nav-search-input" placeholder="Search movies, cast, director..." value="{{ request.GET.q|default:'' }}" aria-label="Search movies">
+            </form>
+
+            <!-- Navigation Links -->
+            <ul class="nav-links">
+                <li>
+                    <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                </li>
+                <li>
+                    <a href="{% url 'discover' %}" class="nav-link {% if request.resolver_match.url_name == 'discover' %}active{% endif %}">Discover & Recommend</a>
+                </li>
+                {% if user.is_authenticated %}
+                <li>
+                    <a href="{% url 'watchlist' %}" class="nav-link {% if request.resolver_match.url_name == 'watchlist' %}active{% endif %}">
+                        Watchlist
+                        <span class="badge-count nav-watchlist-badge" style="{% if watchlist_count == 0 %}display:none;{% endif %}">{{ watchlist_count }}</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <!-- User Authentication Status -->
+            <div class="nav-auth">
+                {% if user.is_authenticated %}
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Hi, <strong>{{ user.username }}</strong></span>
+                    <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-sm btn-outline">Login</a>
+                    <a href="{% url 'register' %}" class="btn btn-sm btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+
+            <!-- Mobile Hamburger Toggle -->
+            <button class="nav-toggle-btn" aria-label="Toggle navigation menu">☰</button>
+        </div>
+    </header>
+
+    <!-- Flash Messages Container -->
+    {% if messages %}
+    <div class="container messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">
+            <span>{{ message }}</span>
+            <button class="alert-close" aria-label="Close message">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h4>🎬 Movie<span style="color: var(--accent-gold);">Mania</span></h4>
+                    <p style="color: var(--text-secondary); line-height: 1.6; max-width: 400px; margin-top: 0.5rem;">
+                        A preference-driven movie discovery and recommendation platform. Helping viewers find the right film based on explicit mood, genre, language, and era preferences.
+                    </p>
+                </div>
+
+                <div class="footer-col">
+                    <h5>Discovery</h5>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'discover' %}">Recommendation Engine</a></li>
+                        <li><a href="{% url 'discover' %}?language=Hindi">Bollywood Hits</a></li>
+                        <li><a href="{% url 'discover' %}?language=English">Hollywood Cinema</a></li>
+                        <li><a href="{% url 'discover' %}?genres=Sci-Fi">Sci-Fi & Thrillers</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h5>Academic Reference</h5>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                        Developed as an academic Django recommendation system, inspired by the GeeksforGeeks Movie Recommendation System reference architecture.
+                    </p>
+                    <div style="margin-top: 0.75rem;">
+                        <a href="/admin/" class="btn btn-sm btn-outline" style="font-size: 0.75rem;">Django Admin</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div>&copy; 2026 MovieMania. Built with Django & SQLite for academic presentation.</div>
+                <div style="color: var(--text-muted);">Crafted for transparent, preference-based recommendations.</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core Scripts -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

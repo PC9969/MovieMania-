@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ movie.title }} ({{ movie.release_year }}) — MovieMania{% endblock %}
+
+{% block content %}
+<!-- Detail Hero Header -->
+<section class="detail-hero">
+    {% if movie.backdrop_url %}
+    <div class="detail-backdrop" style="background-image: url('{{ movie.backdrop_url }}');"></div>
+    {% elif movie.poster_url %}
+    <div class="detail-backdrop" style="background-image: url('{{ movie.poster_url }}');"></div>
+    {% endif %}
+
+    <div class="container detail-layout">
+        <!-- Poster & Watchlist Action -->
+        <div>
+            <div class="detail-poster-wrap">
+                <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="detail-poster-img" style="width:100%; height:100%; object-fit: cover;">
+            </div>
+            
+            <div style="margin-top: 1.25rem;">
+                <button class="btn btn-lg {% if is_in_watchlist %}btn-primary{% else %}btn-secondary{% endif %} btn-watchlist-toggle" data-movie-id="{{ movie.id }}" style="width: 100%;">
+                    {% if is_in_watchlist %}
+                        <span>✓</span> In Watchlist
+                    {% else %}
+                        <span>+</span> Add to Watchlist
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Movie Information -->
+        <div class="detail-header-info">
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+                {% for genre in movie.genres.all %}
+                <span class="genre-pill" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;">{{ genre.name }}</span>
+                {% endfor %}
+                {% if movie.mood_tag %}
+                <span class="genre-pill" style="border-color: var(--accent-gold); color: var(--accent-gold); font-size: 0.8rem;">✨ {{ movie.mood_tag }}</span>
+                {% endif %}
+            </div>
+
+            <h1 class="detail-title">{{ movie.title }}</h1>
+
+            <div class="detail-quick-meta">
+                <span class="detail-rating-badge">★ {{ movie.rating }} / 10</span>
+                <span>📅 {{ movie.release_year }}</span>
+                <span>⏱️ {{ movie.formatted_runtime }}</span>
+                <span>🌐 {{ movie.language }}</span>
+            </div>
+
+            {% if match_score %}
+            <!-- Match Breakdown Box -->
+            <div class="match-breakdown-box">
+                <div class="match-breakdown-title">
+                    <span>🎯</span> {{ match_score }}% Match with your current discovery preferences
+                </div>
+                {% if match_reasons %}
+                <ul style="list-style: none; font-size: 0.88rem; color: var(--text-primary); margin-top: 0.5rem;">
+                    {% for reason in match_reasons %}
+                    <li style="margin-bottom: 0.25rem;">✓ {{ reason }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="detail-overview">
+                <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Overview</h3>
+                <p>{{ movie.overview }}</p>
+            </div>
+
+            <!-- Cast & Crew Grid -->
+            <div class="detail-crew-grid">
+                <div>
+                    <div class="crew-item-label">Director</div>
+                    <div class="crew-item-val">{{ movie.director }}</div>
+                </div>
+                <div>
+                    <div class="crew-item-label">Starring Cast</div>
+                    <div class="crew-item-val">{{ movie.cast }}</div>
+                </div>
+                <div>
+                    <div class="crew-item-label">Language</div>
+                    <div class="crew-item-val">{{ movie.language }}</div>
+                </div>
+                <div>
+                    <div class="crew-item-label">Release Year</div>
+                    <div class="crew-item-val">{{ movie.release_year }}</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <a href="{% url 'discover' %}?genres={{ movie.genres.first.name|default:'' }}" class="btn btn-outline">
+                    <span>🔍</span> More {{ movie.genres.first.name }} Movies
+                </a>
+                <a href="{% url 'discover' %}" class="btn btn-secondary">
+                    <span>🎯</span> Back to Recommendation Engine
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Similar Movies Shelf (Content-Based Recommendations) -->
+{% if similar_movies %}
+<section class="section-wrapper">
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">✨ More Like This</h2>
+                <p class="section-subtitle">Recommended based on shared genres and language.</p>
+            </div>
+        </div>
+
+        <div class="movies-shelf">
+            {% for item in similar_movies %}
+            {% with m=item.movie %}
+            <article class="movie-card">
+                <div class="movie-poster-wrap">
+                    <img src="{{ m.poster_url }}" alt="{{ m.title }}" class="movie-poster-img" loading="lazy">
+                    <button class="watchlist-toggle-btn {% if item.is_in_watchlist %}active{% endif %}" data-movie-id="{{ m.id }}" title="{% if item.is_in_watchlist %}Remove from Watchlist{% else %}Add to Watchlist{% endif %}" aria-label="Bookmark {{ m.title }}">
+                        ★
+                    </button>
+                </div>
+                <div class="movie-info">
+                    <div class="movie-meta-top">
+                        <span>{{ m.release_year }} • {{ m.language }}</span>
+                        <span class="movie-rating">★ {{ m.rating }}</span>
+                    </div>
+                    <h3 class="movie-card-title">
+                        <a href="{% url 'movie_detail' m.slug %}">{{ m.title }}</a>
+                    </h3>
+                    <div class="movie-genres-row">
+                        {% for genre in m.genres.all|slice:":2" %}
+                        <span class="genre-pill">{{ genre.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </article>
+            {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

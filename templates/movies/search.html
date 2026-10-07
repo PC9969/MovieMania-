@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Results for "{{ query }}" — MovieMania{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2.5rem; padding-bottom: 4rem;">
+    <!-- Search Header -->
+    <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.25rem;">
+        <span style="color: var(--accent-gold); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Search Database</span>
+        <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; margin-top: 0.25rem;">
+            {% if query %}
+                Results for "<span style="color: var(--accent-gold);">{{ query }}</span>"
+            {% else %}
+                Search MovieMania Database
+            {% endif %}
+        </h1>
+        <p style="color: var(--text-secondary); margin-top: 0.35rem;">
+            Found <strong>{{ result_count }}</strong> {% if result_count == 1 %}movie{% else %}movies{% endif %} matching title, cast, director, or overview.
+        </p>
+    </div>
+
+    {% if results %}
+    <div class="movies-grid">
+        {% for movie in results %}
+        <article class="movie-card">
+            <div class="movie-poster-wrap">
+                <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="movie-poster-img" loading="lazy">
+                <button class="watchlist-toggle-btn {% if movie.id in user_watchlist_ids %}active{% endif %}" data-movie-id="{{ movie.id }}" title="{% if movie.id in user_watchlist_ids %}Remove from Watchlist{% else %}Add to Watchlist{% endif %}" aria-label="Bookmark {{ movie.title }}">
+                    ★
+                </button>
+            </div>
+            <div class="movie-info">
+                <div class="movie-meta-top">
+                    <span>{{ movie.release_year }} • {{ movie.language }}</span>
+                    <span class="movie-rating">★ {{ movie.rating }}</span>
+                </div>
+                <h3 class="movie-card-title">
+                    <a href="{% url 'movie_detail' movie.slug %}">{{ movie.title }}</a>
+                </h3>
+                <div class="movie-genres-row">
+                    {% for genre in movie.genres.all|slice:":2" %}
+                    <span class="genre-pill">{{ genre.name }}</span>
+                    {% endfor %}
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: auto;">
+                    Dir: {{ movie.director }}
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state-box">
+        <div class="empty-state-icon">🔍</div>
+        <h3 class="empty-state-title">No Movies Found</h3>
+        <p class="empty-state-desc">
+            We couldn't find any movie matching "{{ query }}". Try searching by a different actor, director, or keyword, or explore our recommendation engine.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{% url 'discover' %}" class="btn btn-primary">
+                Explore Recommendations
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-secondary">
+                Back to Home
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

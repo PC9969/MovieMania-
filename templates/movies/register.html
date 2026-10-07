@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Account — MovieMania{% endblock %}
+
+{% block content %}
+<div class="auth-page-wrap">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🍿</div>
+            <h1 class="auth-title">Join MovieMania</h1>
+            <p class="auth-subtitle">Create a free account to save recommendations to your personal watchlist.</p>
+        </div>
+
+        <form method="POST" action="{% url 'register' %}" class="auth-form">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <span class="helptext">{{ field.help_text }}</span>
+                {% endif %}
+                {% if field.errors %}
+                <div class="errorlist">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">
+                Create Free Account
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="{% url 'login' %}">Sign In</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

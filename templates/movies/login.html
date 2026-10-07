@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign In — MovieMania{% endblock %}
+
+{% block content %}
+<div class="auth-page-wrap">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🎬</div>
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to access your personal watchlist & preferences.</p>
+        </div>
+
+        <form method="POST" action="{% url 'login' %}" class="auth-form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                <div class="errorlist">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                <div class="errorlist">{{ form.password.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">
+                Sign In to MovieMania
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account yet? <a href="{% url 'register' %}">Create Account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

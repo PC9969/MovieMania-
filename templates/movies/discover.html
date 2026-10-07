@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Discover & Recommend Movies — MovieMania{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <!-- Page Header -->
+    <div style="margin-bottom: 2rem;">
+        <span style="color: var(--accent-gold); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Preference-Driven Discovery</span>
+        <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.5px; margin-top: 0.25rem;">
+            Tell Us What You Want To Watch
+        </h1>
+        <p style="color: var(--text-secondary); max-width: 700px; margin-top: 0.5rem;">
+            Select your mood, genre, language, and era preferences below. Our recommendation engine computes a transparent match score for each film.
+        </p>
+    </div>
+
+    <div class="discover-layout">
+        <!-- Filter Controls Sidebar -->
+        <aside class="filter-sidebar">
+            <form id="discoverFilterForm" method="GET" action="{% url 'discover' %}">
+                <div class="filter-group">
+                    <div class="filter-label">
+                        <span>Genres</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: none;">Select multiple</span>
+                    </div>
+                    <div class="filter-chips-grid">
+                        {% for genre in all_genres %}
+                        <div>
+                            <input type="checkbox" name="genres" value="{{ genre.name }}" id="genre-{{ genre.id }}" class="chip-checkbox" {% if genre.name in selected_genres %}checked{% endif %}>
+                            <label for="genre-{{ genre.id }}" class="chip-label">{{ genre.name }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label for="languageSelect" class="filter-label">Language</label>
+                    <select name="language" id="languageSelect" class="form-select">
+                        <option value="all" {% if selected_language == 'all' or not selected_language %}selected{% endif %}>All Languages</option>
+                        {% for lang in all_languages %}
+                        <option value="{{ lang }}" {% if selected_language == lang %}selected{% endif %}>{{ lang }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-label">
+                        <span>Minimum Rating</span>
+                        <span id="minRatingDisplay" class="rating-display">{% if selected_min_rating %}{{ selected_min_rating }}+{% else %}Any{% endif %}</span>
+                    </div>
+                    <div class="rating-range-wrap">
+                        <input type="range" name="min_rating" id="minRatingSlider" class="range-slider" min="0" max="9.0" step="0.5" value="{{ selected_min_rating|default:'0' }}">
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label for="eraSelect" class="filter-label">Release Era</label>
+                    <select name="era" id="eraSelect" class="form-select">
+                        <option value="all" {% if selected_era == 'all' or not selected_era %}selected{% endif %}>Any Era / Year</option>
+                        <option value="2020s" {% if selected_era == '2020s' %}selected{% endif %}>2020s (Modern Releases)</option>
+                        <option value="2010s" {% if selected_era == '2010s' %}selected{% endif %}>2010s Blockbusters</option>
+                        <option value="2000s" {% if selected_era == '2000s' %}selected{% endif %}>2000s Millennial Hits</option>
+                        <option value="90s" {% if selected_era == '90s' %}selected{% endif %}>1990s Cult Favorites</option>
+                        <option value="classic" {% if selected_era == 'classic' %}selected{% endif %}>Pre-1990 Golden Classics</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="runtimeSelect" class="filter-label">Runtime / Pace</label>
+                    <select name="runtime" id="runtimeSelect" class="form-select">
+                        <option value="all" {% if selected_runtime == 'all' or not selected_runtime %}selected{% endif %}>Any Runtime</option>
+                        <option value="short" {% if selected_runtime == 'short' %}selected{% endif %}>Quick Watch (&le; 110 min)</option>
+                        <option value="standard" {% if selected_runtime == 'standard' %}selected{% endif %}>Standard (110–150 min)</option>
+                        <option value="epic" {% if selected_runtime == 'epic' %}selected{% endif %}>Epic Length (&gt; 150 min)</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="moodSelect" class="filter-label">Mood / Vibe</label>
+                    <select name="mood" id="moodSelect" class="form-select">
+                        <option value="all" {% if selected_mood == 'all' or not selected_mood %}selected{% endif %}>Any Mood</option>
+                        {% for mood in mood_options %}
+                        <option value="{{ mood }}" {% if selected_mood == mood %}selected{% endif %}>{{ mood }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <span>🎯</span> Find My Movies
+                    </button>
+                    <a href="{% url 'discover' %}" class="btn btn-secondary" title="Clear all filters">
+                        Reset
+                    </a>
+                </div>
+            </form>
+        </aside>
+
+        <!-- Recommendation Results Grid -->
+        <section class="results-container">
+            <div class="discover-results-header">
+                <div class="results-count-text">
+                    Showing <strong>{{ result_count }}</strong> recommended {% if result_count == 1 %}movie{% else %}movies{% endif %}
+                    {% if has_active_filters %}
+                    <span style="color: var(--accent-gold); font-size: 0.88rem; margin-left: 0.5rem;">(Filtered by preferences)</span>
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                    Sorted by Match Score & Rating
+                </div>
+            </div>
+
+            {% if recommendations %}
+            <div class="movies-grid">
+                {% for item in recommendations %}
+                {% with movie=item.movie %}
+                <article class="movie-card">
+                    <div class="movie-poster-wrap">
+                        <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="movie-poster-img" loading="lazy">
+                        
+                        <!-- Transparent Match Percentage Badge -->
+                        <div class="movie-match-badge {% if item.match_score >= 85 %}high{% elif item.match_score >= 65 %}medium{% else %}fair{% endif %}">
+                            {{ item.match_score }}% Match
+                        </div>
+
+                        <!-- Watchlist Bookmark Button -->
+                        <button class="watchlist-toggle-btn {% if item.is_in_watchlist %}active{% endif %}" data-movie-id="{{ movie.id }}" title="{% if item.is_in_watchlist %}Remove from Watchlist{% else %}Add to Watchlist{% endif %}" aria-label="Bookmark {{ movie.title }}">
+                            ★
+                        </button>
+                    </div>
+
+                    <div class="movie-info">
+                        <div class="movie-meta-top">
+                            <span>{{ movie.release_year }} • {{ movie.language }}</span>
+                            <span class="movie-rating">★ {{ movie.rating }}</span>
+                        </div>
+
+                        <h3 class="movie-card-title">
+                            <a href="{% url 'movie_detail' movie.slug %}">{{ movie.title }}</a>
+                        </h3>
+
+                        <div class="movie-genres-row">
+                            {% for genre in movie.genres.all|slice:":3" %}
+                            <span class="genre-pill">{{ genre.name }}</span>
+                            {% endfor %}
+                        </div>
+
+                        {% if item.match_reasons %}
+                        <div class="movie-match-reasons">
+                            <ul>
+                                {% for reason in item.match_reasons|slice:":2" %}
+                                <li>✓ {{ reason }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endwith %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state-box">
+                <div class="empty-state-icon">🎬</div>
+                <h3 class="empty-state-title">No Exact Matches Found</h3>
+                <p class="empty-state-desc">
+                    No movies matched your current combination of filters. Try lowering the minimum rating or selecting 'All' for language/era.
+                </p>
+                <a href="{% url 'discover' %}" class="btn btn-primary">
+                    Reset All Filters
+                </a>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

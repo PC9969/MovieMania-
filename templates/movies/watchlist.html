@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Watchlist — MovieMania{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2.5rem; padding-bottom: 4rem;">
+    <!-- Watchlist Header -->
+    <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <span style="color: var(--accent-gold); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Saved For Later</span>
+            <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; margin-top: 0.25rem;">
+                My Watchlist
+            </h1>
+            <p style="color: var(--text-secondary); margin-top: 0.35rem;">
+                You have <strong class="watchlist-total-count" style="color: var(--text-primary);">{{ item_count }}</strong> saved {% if item_count == 1 %}movie{% else %}movies{% endif %}.
+            </p>
+        </div>
+        <a href="{% url 'discover' %}" class="btn btn-sm btn-outline">
+            + Discover More Movies
+        </a>
+    </div>
+
+    {% if watchlist_items %}
+    <div class="movies-grid">
+        {% for item in watchlist_items %}
+        {% with movie=item.movie %}
+        <article class="movie-card watchlist-item-card">
+            <div class="movie-poster-wrap">
+                <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="movie-poster-img" loading="lazy">
+                <!-- Active Watchlist Button (Clicking removes it) -->
+                <button class="watchlist-toggle-btn active" data-movie-id="{{ movie.id }}" title="Remove from Watchlist" aria-label="Remove {{ movie.title }}">
+                    ★
+                </button>
+            </div>
+            <div class="movie-info">
+                <div class="movie-meta-top">
+                    <span>{{ movie.release_year }} • {{ movie.language }}</span>
+                    <span class="movie-rating">★ {{ movie.rating }}</span>
+                </div>
+                <h3 class="movie-card-title">
+                    <a href="{% url 'movie_detail' movie.slug %}">{{ movie.title }}</a>
+                </h3>
+                <div class="movie-genres-row">
+                    {% for genre in movie.genres.all|slice:":2" %}
+                    <span class="genre-pill">{{ genre.name }}</span>
+                    {% endfor %}
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: auto; padding-top: 0.5rem; border-top: 1px solid var(--border-subtle);">
+                    Added on {{ item.added_at|date:"M d, Y" }}
+                </div>
+            </div>
+        </article>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state-box">
+        <div class="empty-state-icon">🍿</div>
+        <h3 class="empty-state-title">Your Watchlist is Empty</h3>
+        <p class="empty-state-desc">
+            You haven't added any movies to your watchlist yet. Browse recommendations or discover trending films to start saving what you want to watch.
+        </p>
+        <a href="{% url 'discover' %}" class="btn btn-primary">
+            <span>🎯</span> Launch Recommendation Engine
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
